@@ -64,6 +64,14 @@ func createFile() {
     // Ensure the file exists before appending
     if !FileManager.default.fileExists(atPath: fileURL.path) {
         FileManager.default.createFile(atPath: fileURL.path, contents: nil)
+    } else {
+        let emptyString = ""
+        do {
+            try emptyString.write(to: fileURL, atomically: false, encoding: .utf8)
+            print("File contents cleared successfully at: \(fileURL)")
+        } catch {
+            print("Error clearing file contents: \(error.localizedDescription)")
+        }
     }
 
     for i in 1...100 {
