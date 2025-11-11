@@ -92,7 +92,7 @@ func createFile() {
 
     print("File appended successfully at \(fileURL.path)")
     
-    NSWorkspace.shared.open(fileURL)
+    NotificationCenter.default.post(name: .fileDidUpdate, object: nil)
 }
 
 func appendFile() {
@@ -112,5 +112,8 @@ func appendFile() {
             print("Failed to write to file: \(error)")
         }
     }
-    NSWorkspace.shared.open(fileURL)
+}
+
+extension Notification.Name {
+    static let fileDidUpdate = Notification.Name("fileDidUpdate")
 }
