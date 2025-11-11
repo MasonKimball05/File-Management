@@ -94,3 +94,23 @@ func createFile() {
     
     NSWorkspace.shared.open(fileURL)
 }
+
+func appendFile() {
+    
+    for i in 1...50 {
+        let content = "\(i + 100)) " + createContent().joined(separator: ", ") + "\n"
+        
+        do {
+            // Open file for appending
+            let handle = try FileHandle(forWritingTo: fileURL)
+            handle.seekToEndOfFile() // Move pointer to end
+            if let data = content.data(using: .utf8) {
+                handle.write(data)
+            }
+            handle.closeFile()
+        } catch {
+            print("Failed to write to file: \(error)")
+        }
+    }
+    NSWorkspace.shared.open(fileURL)
+}
