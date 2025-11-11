@@ -7,8 +7,11 @@
 import Foundation
 
 let filename = "formatted_names.txt"
-let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-let fileURL = documentsDir.appendingPathComponent(filename)
+let desktopURL = URL(
+    fileURLWithPath: NSHomeDirectory()
+    ).appendingPathComponent("Documents")
+
+let fileURL = desktopURL.appendingPathComponent(filename)
 
 
 func createFile() {
