@@ -39,7 +39,7 @@ func createContent() -> [String] {
         let year = Int.random(in: 1970...2005)
         let month = Int.random(in: 1...12)
         let day = Int.random(in: 1...28)
-        return String(format: "%04d-%02d-%02d", year, month, day)
+        return String(format: "%02d-%02d-%04d", day, month, year)
     }
 
     let phoneNumber = (0..<10).map { _ in
