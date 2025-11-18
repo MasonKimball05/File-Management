@@ -75,7 +75,7 @@ func createFile() {
     }
 
     for i in 1...100 {
-        let content = "\(i)) " + createContent().joined(separator: ", ") + "\n"
+        let content = createContent().joined(separator: ", ") + "\n"
 
         do {
             // Open file for appending
@@ -97,8 +97,8 @@ func createFile() {
 
 func appendFile() {
     
-    for i in 1...50 {
-        let content = "\(i + 100)) " + createContent().joined(separator: ", ") + "\n"
+    for _ in 1...50 {
+        let content = createContent().joined(separator: ", ") + "\n"
         
         do {
             // Open file for appending
@@ -116,4 +116,28 @@ func appendFile() {
 
 extension Notification.Name {
     static let fileDidUpdate = Notification.Name("fileDidUpdate")
+}
+
+func fileArray() -> [[String]] {
+    var fileData: [[String]] = []
+    
+    do {
+        
+        let content = try String(contentsOf: fileURL, encoding: .utf8)
+        let lines = content.components(separatedBy: .newlines)
+        
+        for line in lines {
+            // Skip empty lines
+            if !line.isEmpty {
+                let components = line.components(separatedBy: ",")
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                fileData.append(components)
+            }
+        }
+        
+    } catch {
+        print("Error reading file: \(error.localizedDescription)")
+    }
+    
+    return fileData
 }
