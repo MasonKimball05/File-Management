@@ -1,0 +1,33 @@
+Json struct
+
+//make codable struct
+Struct Human: Codable {
+    let fn: String
+    let ln: String
+    let str: String
+    let ct: String
+    let sta: String
+    let zc: String
+    let dob: String
+    let pn: String
+}
+
+//Declare instance of the struct
+Let myHuman = Human(fn: value, ln: value, str: value, ct: value, sta: value, zc: value, dob: value, pn: value
+
+//Create a json encoder and attempt to encode the object to json format
+Let encoder = JSONEncoder()
+encoder.outputformatting = .prettyPrinted
+Do{
+    let jsonData = try encoder.encode(myHuman)
+} catch {
+    print(“Error”)
+}
+
+//Write to the desired file
+do {
+    try jsonData.write(to: fileURL)
+    print("JSON data written successfully to: \(fileURL.lastPathComponent)")
+} catch {
+    print("Error writing JSON data to file: \(error)")
+}
