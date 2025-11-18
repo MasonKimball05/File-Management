@@ -24,10 +24,29 @@ Do{
     print(“Error”)
 }
 
+//Make sure that we have designated a separate json file to read/write to
+
 //Write to the desired file
 do {
     try jsonData.write(to: fileURL)
     print("JSON data written successfully to: \(fileURL.lastPathComponent)")
 } catch {
     print("Error writing JSON data to file: \(error)")
+}
+
+//Read
+do {
+    let jsonData = try Data(contentsOf: fileURL)
+    // ... (Proceed to decode jsonData)
+} catch {
+    print("Error reading data from file: \(error)")
+}
+
+//Decode back to readable swift objects
+let decoder = JSONDecoder()
+do {
+    let decodedObject = try decoder.decode(MyData.self, from: jsonData)
+    print("Decoded object: \(decodedObject)")
+} catch {
+    print("Error decoding JSON data: \(error)")
 }
