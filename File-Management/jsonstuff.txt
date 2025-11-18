@@ -45,8 +45,18 @@ do {
 //Decode back to readable swift objects
 let decoder = JSONDecoder()
 do {
-    let decodedObject = try decoder.decode(MyData.self, from: jsonData)
+    let decodedObject = try decoder.decode(Human.self, from: jsonData)
     print("Decoded object: \(decodedObject)")
 } catch {
     print("Error decoding JSON data: \(error)")
 }
+
+//Common snags
+1. Cant write into the app bundle
+2. Make sure file path is correct, it should go to the sandbox but we should try to get it to the regular documents folder
+writing to a relative path will fail
+3. Encoding errors due to mismatched types (make sure all properties exist in the json or provide defaults)
+4. If file is in project but not marked as ('target membership -> the app name') it wont be in the bundle at run time (common for bundled files)
+5. Wrong jsonencoder/decoder settings
+6. Trying to read a file before it exists (Use guard clause)
+7. 
