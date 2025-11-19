@@ -11,7 +11,7 @@ import SwiftUI
 struct File_ManagementApp: App {
     var body: some Scene {
         WindowGroup {
-            FileViewer(fileURL: fileURL)
+            FileViewer()
         }
     }
 }

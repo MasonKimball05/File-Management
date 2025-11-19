@@ -34,7 +34,7 @@ struct TableDisplayView: View {
                                 .border(Color.gray, width: 1)
                             
                             ForEach(0..<(data.first?.count ?? 0), id: \.self) { colIndex in
-                                Text("Col \(colIndex)")
+                                Text(["First", "Last", "Address", "City", "State", "ZIP", "DOB", "Phone"][colIndex])
                                     .fontWeight(.bold)
                                     .frame(minWidth: 120, alignment: .leading)
                                     .padding(8)
@@ -71,61 +71,141 @@ struct TableDisplayView: View {
     }
 }
 
+enum FileType: String, CaseIterable {
+    case txt = "TXT"
+    case json = "JSON"
+}
+
 struct FileViewer: View {
-    let fileURL: URL
+    @State private var selectedFileType: FileType = .txt
     @State private var fileContents: String = ""
     @State private var showTable = false
     @State private var tableData: [[String]] = []
     
+    var currentFileURL: URL {
+        selectedFileType == .txt ? txtfileURL : jsonfileURL
+    }
+    
     var body: some View {
         VStack {
+            // File type selector
+            Picker("File Type", selection: $selectedFileType) {
+                ForEach(FileType.allCases, id: \.self) { type in
+                    Text(type.rawValue).tag(type)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding()
+            .onChange(of: selectedFileType) { _ in
+                refreshContents()
+            }
+            
             TextEditor(text: $fileContents)
                 .padding()
                 .frame(minHeight: 300)
             
             HStack {
-                Button("Refresh File") {
-                    refreshContents()
-                }
-                Button("Append 50 Lines") {
-                    appendFile()
-                    refreshContents()
-                }
                 Button("Reset File") {
-                    createFile()
+                    if selectedFileType == .txt {
+                        createFile()
+                    } else {
+                        createjsonFile()
+                    }
                     refreshContents()
                 }
-                Button("Get File Array") {
-                    let array = fileArray()
-                    
-                    print("Array count: \(array.count)")
-                    print("First row: \(array.first ?? [])")
-                    
-                    // Set data first
-                    tableData = array
-                    
-                    // Then show sheet after a tiny delay
-                    DispatchQueue.main.async {
-                        print("DEBUG - tableData now has \(tableData.count) rows")
-                        showTable = true
+                
+                Button("Append 50 Lines") {
+                    if selectedFileType == .txt {
+                        appendFile()
+                    } else {
+                        appendtoJsonFile()
                     }
+                    refreshContents()
+                }
+                
+                Button("Show Table") {
+                    // First close any existing sheet
+                    showTable = false
                     
-                    printFormattedArray(array)
+                    // Small delay to ensure sheet is closed
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        // Check if file exists, create it if not
+                        if !FileManager.default.fileExists(atPath: currentFileURL.path) {
+                            print("File doesn't exist, creating it...")
+                            if selectedFileType == .txt {
+                                createFile()
+                            } else {
+                                createjsonFile()
+                            }
+                            refreshContents()
+                        }
+                        
+                        let array = selectedFileType == .txt ? fileArray() : jsonFileArray()
+                        
+                        print("Array count: \(array.count)")
+                        print("First row: \(array.first ?? [])")
+                        
+                        if array.isEmpty {
+                            print("Array is empty, creating file with data...")
+                            // File exists but is empty, create data
+                            if selectedFileType == .txt {
+                                createFile()
+                            } else {
+                                createjsonFile()
+                            }
+                            refreshContents()
+                            
+                            // Try reading again after creating
+                            let newArray = selectedFileType == .txt ? fileArray() : jsonFileArray()
+                            tableData = newArray
+                        } else {
+                            tableData = array
+                        }
+                        
+                        // Show table
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                            print("DEBUG - tableData now has \(tableData.count) rows")
+                            showTable = true
+                        }
+                        
+                        printFormattedArray(tableData)
+                    }
                 }
             }
             .padding()
         }
-        .onAppear(perform: refreshContents)
+        .onAppear {
+            refreshContents()
+            // Create files if they don't exist
+            if !FileManager.default.fileExists(atPath: txtfileURL.path) {
+                createFile()
+            }
+            if !FileManager.default.fileExists(atPath: jsonfileURL.path) {
+                createjsonFile()
+            }
+        }
         .sheet(isPresented: $showTable) {
-            TableDisplayView(data: tableData)
+            if !tableData.isEmpty {
+                TableDisplayView(data: tableData)
+            } else {
+                VStack {
+                    Text("No data to display")
+                        .font(.title)
+                        .padding()
+                    Button("Close") {
+                        showTable = false
+                    }
+                    .padding()
+                }
+            }
         }
     }
     
     func refreshContents() {
         do {
-            fileContents = try String(contentsOf: fileURL)
+            fileContents = try String(contentsOf: currentFileURL)
         } catch {
-            fileContents = "Failed to load file: \(error.localizedDescription)"
+            fileContents = "File not found. Click 'Reset File' to create it."
         }
     }
     

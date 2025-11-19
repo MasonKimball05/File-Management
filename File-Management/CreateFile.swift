@@ -7,12 +7,14 @@
 import Foundation
 import AppKit
 
-let filename = "formatted_names.txt"
-let desktopURL = URL(
+let txtfilename = "formatted_names.txt"
+let jsonfilename = "formatted_names.json"
+let documentsURL = URL(
     fileURLWithPath: NSHomeDirectory()
     ).appendingPathComponent("Documents")
 
-let fileURL = desktopURL.appendingPathComponent(filename)
+let txtfileURL = documentsURL.appendingPathComponent(txtfilename)
+let jsonfileURL = documentsURL.appendingPathComponent(jsonfilename)
 
 func createContent() -> [String] {
     let firstNames = ["Liam", "Olivia", "Noah", "Emma", "Ava", "James", "Sophia", "Lucas", "Isabella", "Mason"]
@@ -60,26 +62,28 @@ func createContent() -> [String] {
     return [fn, ln, st, c, stt, zc, d, p]
 }
 
+// TXT FILE FUNCTIONS
+
 func createFile() {
     // Ensure the file exists before appending
-    if !FileManager.default.fileExists(atPath: fileURL.path) {
-        FileManager.default.createFile(atPath: fileURL.path, contents: nil)
+    if !FileManager.default.fileExists(atPath: txtfileURL.path) {
+        FileManager.default.createFile(atPath: txtfileURL.path, contents: nil)
     } else {
         let emptyString = ""
         do {
-            try emptyString.write(to: fileURL, atomically: false, encoding: .utf8)
-            print("File contents cleared successfully at: \(fileURL)")
+            try emptyString.write(to: txtfileURL, atomically: false, encoding: .utf8)
+            print("File contents cleared successfully at: \(txtfileURL)")
         } catch {
             print("Error clearing file contents: \(error.localizedDescription)")
         }
     }
 
-    for i in 1...100 {
+    for _ in 1...100 {
         let content = createContent().joined(separator: ", ") + "\n"
 
         do {
             // Open file for appending
-            let handle = try FileHandle(forWritingTo: fileURL)
+            let handle = try FileHandle(forWritingTo: txtfileURL)
             handle.seekToEndOfFile() // Move pointer to end
             if let data = content.data(using: .utf8) {
                 handle.write(data)
@@ -90,19 +94,18 @@ func createFile() {
         }
     }
 
-    print("File appended successfully at \(fileURL.path)")
+    print("File appended successfully at \(txtfileURL.path)")
     
     NotificationCenter.default.post(name: .fileDidUpdate, object: nil)
 }
 
 func appendFile() {
-    
     for _ in 1...50 {
         let content = createContent().joined(separator: ", ") + "\n"
         
         do {
             // Open file for appending
-            let handle = try FileHandle(forWritingTo: fileURL)
+            let handle = try FileHandle(forWritingTo: txtfileURL)
             handle.seekToEndOfFile() // Move pointer to end
             if let data = content.data(using: .utf8) {
                 handle.write(data)
@@ -112,18 +115,13 @@ func appendFile() {
             print("Failed to write to file: \(error)")
         }
     }
-}
-
-extension Notification.Name {
-    static let fileDidUpdate = Notification.Name("fileDidUpdate")
 }
 
 func fileArray() -> [[String]] {
     var fileData: [[String]] = []
     
     do {
-        
-        let content = try String(contentsOf: fileURL, encoding: .utf8)
+        let content = try String(contentsOf: txtfileURL, encoding: .utf8)
         let lines = content.components(separatedBy: .newlines)
         
         for line in lines {
@@ -140,4 +138,104 @@ func fileArray() -> [[String]] {
     }
     
     return fileData
+}
+
+// JSON FILE FUNCTIONS
+
+func createjsonFile() {
+    // Create array of dictionaries
+    var jsonArray: [[String: String]] = []
+    
+    for _ in 1...100 {
+        let content = createContent()
+        let person: [String: String] = [
+            "firstName": content[0],
+            "lastName": content[1],
+            "address": content[2],
+            "city": content[3],
+            "state": content[4],
+            "zip": content[5],
+            "dob": content[6],
+            "phone": content[7]
+        ]
+        jsonArray.append(person)
+    }
+    
+    do {
+        // Convert to JSON data
+        let jsonData = try JSONSerialization.data(withJSONObject: jsonArray, options: .prettyPrinted)
+        
+        // Write to file
+        try jsonData.write(to: jsonfileURL)
+        print("JSON file created successfully at: \(jsonfileURL)")
+    } catch {
+        print("Error creating JSON file: \(error.localizedDescription)")
+    }
+    
+    NotificationCenter.default.post(name: .fileDidUpdate, object: nil)
+}
+
+func appendtoJsonFile() {
+    do {
+        // Read existing JSON
+        let existingData = try Data(contentsOf: jsonfileURL)
+        var jsonArray = try JSONSerialization.jsonObject(with: existingData) as? [[String: String]] ?? []
+        
+        // Add 50 new entries
+        for _ in 1...50 {
+            let content = createContent()
+            let person: [String: String] = [
+                "firstName": content[0],
+                "lastName": content[1],
+                "address": content[2],
+                "city": content[3],
+                "state": content[4],
+                "zip": content[5],
+                "dob": content[6],
+                "phone": content[7]
+            ]
+            jsonArray.append(person)
+        }
+        
+        // Write back to file
+        let jsonData = try JSONSerialization.data(withJSONObject: jsonArray, options: .prettyPrinted)
+        try jsonData.write(to: jsonfileURL)
+        print("JSON file appended successfully at \(jsonfileURL.path)")
+    } catch {
+        print("Error appending to JSON file: \(error.localizedDescription)")
+    }
+    
+    NotificationCenter.default.post(name: .fileDidUpdate, object: nil)
+}
+
+func jsonFileArray() -> [[String]] {
+    var fileData: [[String]] = []
+    
+    do {
+        let jsonData = try Data(contentsOf: jsonfileURL)
+        let jsonArray = try JSONSerialization.jsonObject(with: jsonData) as? [[String: String]] ?? []
+        
+        for person in jsonArray {
+            let row = [
+                person["firstName"] ?? "",
+                person["lastName"] ?? "",
+                person["address"] ?? "",
+                person["city"] ?? "",
+                person["state"] ?? "",
+                person["zip"] ?? "",
+                person["dob"] ?? "",
+                person["phone"] ?? ""
+            ]
+            fileData.append(row)
+        }
+        
+    } catch {
+        print("Error reading JSON file: \(error.localizedDescription)")
+    }
+    
+    return fileData
+}
+
+extension Notification.Name {
+    static let fileDidUpdate = Notification.Name("fileDidUpdate")
 }
