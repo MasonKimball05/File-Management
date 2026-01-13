@@ -59,4 +59,4 @@ writing to a relative path will fail
 4. If file is in project but not marked as ('target membership -> the app name') it wont be in the bundle at run time (common for bundled files)
 5. Wrong jsonencoder/decoder settings
 6. Trying to read a file before it exists (Use guard clause)
-7. 
+7.
